@@ -126,16 +126,16 @@
   chip("tier", "all", "All tiers", T.length); TIERS.forEach(([k, n]) => chip("tier", k, n, T.filter(t => t.tier === k).length)); $("#filters").appendChild(el("span", "sep"));
   chip("type", "all", "All goals"); TYPES.forEach(([k, n]) => chip("type", k, n, T.filter(t => t.types.includes(k)).length));
   const tiles = T.map(t => {
-    const d = el("div", "tile" + (t.clip ? " star" : ""), '<img loading="lazy" src="media/tiles/' + t.id + '.jpg" alt=""><span class="st' + (t.success ? "" : " x") + '"></span><span class="lb">' + t.tier + ", " + t.seconds.toFixed(0) + " s</span>");
+    const d = el("div", "tile", '<img loading="lazy" src="media/tiles/' + t.id + '.jpg" alt=""><span class="st' + (t.success ? "" : " x") + '"></span><span class="lb">' + t.tier + ", " + t.seconds.toFixed(0) + " s</span>");
     let vid = null; d.onmouseenter = () => { if (!vid) { vid = el("video"); vid.muted = true; vid.loop = true; vid.playsInline = true; vid.src = "media/tiles/" + t.id + ".mp4"; d.insertBefore(vid, d.children[1]); } vid.play().catch(() => {}); };
     d.onmouseleave = () => { if (vid) vid.pause(); }; d.onclick = () => open(t); grid.appendChild(d); return d;
   });
-  function apply() { let n = 0; T.forEach((t, i) => { const ok = (F.tier === "all" || t.tier === F.tier) && (F.type === "all" || t.types.includes(F.type)); tiles[i].classList.toggle("hide", !ok); n += ok; }); $("#gridCount").textContent = n + " of 75 tasks. Hover to play the last segment of a task, click for details. Tiles marked “full clip” have a longer video."; }
+  function apply() { let n = 0; T.forEach((t, i) => { const ok = (F.tier === "all" || t.tier === F.tier) && (F.type === "all" || t.types.includes(F.type)); tiles[i].classList.toggle("hide", !ok); n += ok; }); $("#gridCount").textContent = n + " of 75 tasks. Hover to play the last segment of a task, click for details."; }
   apply();
   const modal = $("#modal"); function open(t) {
     $("#modalBody").innerHTML = '<video controls autoplay muted loop playsinline src="media/' + (t.clip ? "clips/" : "tiles/") + t.id + '.mp4"></video><h3>' + esc(t.clip || "Task " + t.id.replace("body", "posture").replace("_", " ")) + '</h3><p style="margin:0;color:var(--sub)">“' + esc(t.instruction) + '”</p><div class="meta">' +
       '<span class="tag b">' + t.tier + " tier</span>" + t.types.map(x => '<span class="tag">' + x + "</span>").join("") + '<span class="tag">' + t.seconds.toFixed(0) + " s of motion</span><span class=\"tag\">" + t.segments + " segments</span><span class=\"tag\">" + t.tries + " tries</span>" +
-      '<span class="tag" style="background:' + (t.success ? "var(--ok)" : "var(--bad)") + ';color:#fff">' + (t.success ? "completed" : "not completed") + "</span></div>" + (t.clip ? "" : '<p class="hint">The clip shows the last committed segment of this task.</p>');
+      '<span class="tag" style="background:' + (t.success ? "var(--ok)" : "var(--bad)") + ';color:#fff">' + (t.success ? "completed" : "not completed") + "</span></div>" + '<p class="hint">' + (t.clip ? "The clip shows selected segments of this task." : "The clip shows the last committed segment of this task.") + "</p>";
     modal.hidden = false;
   }
   const close = () => { modal.hidden = true; $("#modalBody").innerHTML = ""; }; $("#modalClose").onclick = close; modal.onclick = e => { if (e.target === modal) close(); }; addEventListener("keydown", e => { if (e.key === "Escape") close(); });

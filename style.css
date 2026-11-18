@@ -104,7 +104,6 @@ pre,code{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace}
 .tile .st::after{content:"";position:absolute;left:6px;top:3px;width:5px;height:9px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(42deg)}
 .tile .st.x{background:var(--bad)}.tile .st.x::after{content:"×";border:0;transform:none;left:0;top:-4px;width:18px;text-align:center;color:#fff;font-weight:700;font-size:15px}
 .tile .lb{position:absolute;left:8px;bottom:8px;font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px;background:rgba(29,29,31,.72);color:#fff}
-.tile.star::before{content:"full clip";position:absolute;left:8px;top:8px;z-index:1;font-size:10px;font-weight:700;padding:3px 7px;border-radius:999px;background:#fff;color:#1d1d1f}
 .tile.hide{display:none}
 
 /* results */
