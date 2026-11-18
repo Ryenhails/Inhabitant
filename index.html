@@ -148,10 +148,16 @@
     <p class="eyebrow reveal">The benchmark, Inhabit</p>
     <h2 class="reveal">75 long-horizon tasks, 31 layouts.</h2>
     <p class="lead reveal">Each task is one instruction with up to three goals, carried out by the whole body in one of 31 furniture layouts. A task takes 15 to 45 seconds of continuous motion, built from 4 to 12 segments.</p>
-    <div class="filters reveal" id="filters"></div>
-    <div class="tiers reveal" id="tiers"></div>
-    <div class="grid reveal" id="grid"></div>
-    <p class="hint reveal" id="gridCount"></p>
+    <div class="tb reveal">
+      <div class="tb-main">
+        <div class="tabs" id="tierTabs" role="tablist"></div>
+        <div class="tierhead" id="tierHead"></div>
+        <div class="filters" id="typeChips"></div>
+        <div class="grid" id="grid"></div>
+        <button class="btn small more" id="moreBtn"></button>
+      </div>
+      <aside class="tb-side"><div class="tp" id="taskPanel"></div></aside>
+    </div>
   </div>
 </section>
 
@@ -201,8 +207,6 @@
   </div>
 </section>
 </main>
-
-<div class="modal" id="modal" hidden><div class="sheet" role="dialog" aria-modal="true"><button class="close" id="modalClose" aria-label="Close">×</button><div id="modalBody"></div></div></div>
 
 <script src="data/data.js"></script>
 <script src="app.js"></script>
