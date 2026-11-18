@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Inhabitant: long-horizon human-scene interaction</title>
+<meta name="description" content="Inhabitant is a training-free agent framework for long-horizon human-scene interaction with spatial control and quantitative feedback.">
+<meta property="og:title" content="Inhabitant">
+<meta property="og:description" content="One instruction. A whole apartment. One body.">
+<meta property="og:image" content="media/teaser.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="nav" id="nav">
+  <a class="brand" href="#top">Inhabitant</a>
+  <nav class="links">
+    <a href="#episode">Episode</a><a href="#loop">How it works</a><a href="#tasks">Tasks</a><a href="#results">Results</a><a href="#filmSec">Film</a><a href="#cite">Cite</a>
+  </nav>
+  <div class="nav-right">
+    <button class="icon-btn" id="themeBtn" aria-label="Switch between day and night"><span class="sun"></span></button>
+    <a class="btn small ext" data-link="arxiv" href="#">arXiv</a>
+  </div>
+</header>
+
+<main id="top">
+<!-- ================= the way in: scroll moves the camera from above the apartment down to the body ================= -->
+<section class="fly" id="flyIn">
+  <div class="fly-stage">
+    <video id="flyInV" src="media/fly_in.mp4" poster="media/fly_in.jpg" muted playsinline preload="auto"></video>
+    <div class="fly-shade"></div>
+    <div class="fly-copy center" data-from="0" data-to="0.26">
+      <h1>Inhabitant</h1>
+      <p class="tagline">Toward Long-horizon Human-scene Interaction</p>
+      <p class="authors" id="authors"></p>
+      <div class="cta">
+        <button class="btn primary" id="playFilm"><span class="tri"></span>Watch the film</button>
+        <a class="btn glass ext" data-link="arxiv" href="#">arXiv</a><a class="btn glass ext" data-link="github" href="#">GitHub</a><a class="btn glass ext" data-link="hf" href="#">Dataset</a>
+      </div>
+      <p class="scrollhint">Scroll to step inside<span></span></p>
+    </div>
+    <div class="fly-copy low" data-from="0.36" data-to="0.66"><p class="say">It starts with one natural-language instruction for a household task.</p></div>
+    <div class="fly-copy low" data-from="0.74" data-to="1.01"><p class="say">An LLM agent generates a motion sequence of whole-body scene interaction.</p></div>
+  </div>
+</section>
+
+<!-- ================= episode ================= -->
+<section class="band" id="episode">
+  <div class="wrap">
+    <p class="eyebrow reveal">One episode</p>
+    <h2 class="reveal">A sentence goes in.<br>A continuous motion comes out.</h2>
+    <p class="quote reveal" id="epInstruction"></p>
+    <div class="goals reveal" id="epGoals"></div>
+    <div class="player reveal">
+      <div class="stage">
+        <video id="epVideo" src="media/episode/auto.mp4" poster="media/episode/auto.jpg" muted playsinline preload="metadata"></video>
+        <button class="bigplay" id="epPlay" aria-label="Play or pause"><span class="tri"></span></button>
+        <div class="stage-tag" id="epTag">segment 1</div>
+      </div>
+      <aside class="side">
+        <div class="map" id="epMap">
+          <video id="epTop" src="media/episode/top.mp4" poster="media/episode/top.jpg" muted playsinline preload="metadata"></video>
+          <svg id="epSvg" viewBox="0 0 1000 560" preserveAspectRatio="none"></svg>
+        </div>
+        <div class="segcard" id="segCard"></div>
+      </aside>
+    </div>
+    <div class="segbar reveal" id="segBar"></div>
+    <p class="hint reveal">Click a segment to jump to it. Every block is one motion that the agent committed after trying, measuring and revising it.</p>
+  </div>
+</section>
+
+<!-- ================= loop ================= -->
+<section class="band alt" id="loop">
+  <div class="wrap">
+    <p class="eyebrow reveal">How it works</p>
+    <h2 class="reveal">Try. Measure. <span class="grad">Revise.</span></h2>
+    <p class="lead reveal">Inhabitant connects a language model to a pretrained motion generator and a scene simulator through two interfaces: spatial control over the motion, and quantitative feedback on its execution. Nothing is trained.</p>
+    <h3 class="sechead reveal">The framework</h3>
+    <div class="fw reveal" id="fw">
+      <div class="fw-scroll">
+      <svg viewBox="0 0 1200 600" role="img" aria-label="The Inhabitant framework: an agent, a motion generator and a scene simulator, connected by spatial control and quantitative feedback">
+        <defs>
+          <linearGradient id="fwg" x1="0" x2="1"><stop offset="0" stop-color="#0a66e0"/><stop offset="1" stop-color="#7a5cfa"/></linearGradient>
+          <marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="fw-ab"/></marker>
+          <marker id="ao" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="fw-ao"/></marker>
+          <marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="fw-ag"/></marker>
+        </defs>
+        <!-- edges -->
+        <g class="fw-e" data-k="control"><path class="ln blue" d="M300 215 C380 215 390 130 468 130" marker-end="url(#ab)"/><path class="flow blue" d="M300 215 C380 215 390 130 468 130"/>
+          <g transform="translate(318 96)"><circle r="15" class="num blue"/><text class="numt" y="5.5">1</text><text class="lab blue" x="24" y="-2">try(c, e)</text><text class="sub" x="24" y="18">spatial control</text></g></g>
+        <g class="fw-e" data-k="control"><path class="ln blue" d="M732 130 C810 130 820 215 898 215" marker-end="url(#ab)"/><path class="flow blue" d="M732 130 C810 130 820 215 898 215"/><text class="sub" x="800" y="118">motion</text></g>
+        <g class="fw-e" data-k="feedback"><path class="ln orange" d="M900 300 L304 300" marker-end="url(#ao)"/><path class="flow orange" d="M900 300 L304 300"/>
+          <g transform="translate(486 268)"><circle r="15" class="num orange"/><text class="numt" y="5.5">2</text><text class="lab orange" x="24" y="-2">measure(q)</text><text class="sub" x="140" y="-2">distances, positions, contacts</text></g></g>
+        <g class="fw-e" data-k="qual"><path class="ln grey" d="M900 352 L304 352" marker-end="url(#ag)"/><text class="sub" x="486" y="378">rendered frames and a success check, after every try</text></g>
+        <g class="fw-e" data-k="commit"><path class="ln ink" d="M170 392 L170 478" marker-end="url(#ag)"/>
+          <g transform="translate(204 428)"><circle r="15" class="num ink"/><text class="numt" y="5.5">4</text><text class="lab" x="24" y="-2">commit</text><text class="sub" x="24" y="18">or roll back to an earlier segment</text></g></g>
+        <!-- input -->
+        <g class="fw-n" data-k="input"><rect x="40" y="26" width="236" height="84" rx="24" class="box inp"/><text class="eyb" x="64" y="56">INPUT</text><text class="lab" x="64" y="80">Instruction</text><text class="sub" x="64" y="99">and the scene state, as text</text>
+          <path class="ln ink" d="M158 110 L158 146" marker-end="url(#ag)"/></g>
+        <!-- nodes -->
+        <g class="fw-n" data-k="agent"><rect x="40" y="150" width="260" height="240" rx="28" class="box"/><text class="ttl" x="68" y="198">Agent</text><text class="sub" x="68" y="224">a language model, not trained</text>
+          <rect x="68" y="246" width="200" height="40" rx="20" class="chipb"/><g data-ico="claude" transform="translate(82 255) scale(.92)" fill="#fff"></g><text class="chipt" x="112" y="272">Claude Opus 5.5</text>
+          <text class="sub" x="68" y="314">or any other language model</text><g transform="translate(83 362)"><circle r="15" class="num grad"/><text class="numt" y="5.5">3</text><text class="lab" x="24" y="6">revise</text></g></g>
+        <g class="fw-n" data-k="gen"><rect x="470" y="50" width="260" height="160" rx="28" class="box"/><text class="ttl" x="498" y="98">Motion generator</text><text class="sub" x="498" y="124">whole-body motion from text</text><text class="sub" x="498" y="144">and spatial constraints</text>
+          <rect x="498" y="158" width="196" height="36" rx="18" class="chipn"/><g data-ico="nvidia" transform="translate(511 165) scale(.92)" fill="#76B900"></g><text class="chipt" x="542" y="182">Kimodo, by NVIDIA</text></g>
+        <g class="fw-n" data-k="sim"><rect x="900" y="150" width="260" height="240" rx="28" class="box"/><text class="ttl" x="928" y="198">Scene simulator</text><text class="sub" x="928" y="224">furnished scenes, 31 layouts</text>
+          <text class="sub" x="928" y="262">furniture stops the body</text><text class="sub" x="928" y="284">objects move when touched,</text><text class="sub" x="928" y="306">thrown or kicked</text>
+          <rect x="928" y="330" width="150" height="36" rx="18" class="chipn"/><text class="chipt" x="1003" y="354" text-anchor="middle">half-physics</text></g>
+        <!-- the interaction sequence -->
+        <g class="fw-n" data-k="commit"><text class="lab" x="40" y="512">Interaction sequence</text><text class="sub" x="1160" y="512" text-anchor="end">one block per committed segment</text><g id="fwSeq"></g></g>
+      </svg>
+      </div>
+      <div class="fw-info" id="fwInfo"></div>
+      <p class="hint">Hover or tap a part of the diagram. Technical details are in the paper.</p>
+    </div>
+    <h3 class="sechead reveal">One revision, step by step</h3>
+    <div class="loop reveal">
+      <div class="loop-stage">
+        <video id="lpVideo" src="media/episode/cushion.mp4" poster="media/episode/cushion.jpg" muted playsinline preload="metadata"></video>
+        <svg id="lpSvg" viewBox="0 0 1000 562.5" preserveAspectRatio="none"></svg>
+        <div class="stage-tag" id="lpTag">try 1</div>
+      </div>
+      <div class="loop-side">
+        <div class="steps" id="lpSteps">
+          <button data-s="0" class="on"><i>1</i>Try</button><button data-s="1"><i>2</i>Measure</button><button data-s="2"><i>3</i>Revise</button><button data-s="3"><i>4</i>Try again</button>
+        </div>
+        <div class="panel" id="lpPanel"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= the way out: the camera rises back above the apartment ================= -->
+<section class="fly short" id="flyOut">
+  <div class="fly-stage">
+    <video id="flyOutV" src="media/fly_out.mp4" poster="media/fly_out.jpg" muted playsinline preload="auto"></video>
+    <div class="fly-shade"></div>
+    <div class="fly-copy low" data-from="0" data-to="0.45"><p class="kicker">That was one task</p><p class="say">Three goals, 29 seconds of motion, 10 segments.</p></div>
+    <div class="fly-copy center" data-from="0.6" data-to="1.01"><h2 class="huge">There are <span class="grad">75</span>.</h2></div>
+  </div>
+</section>
+
+<!-- ================= tasks ================= -->
+<section class="band" id="tasks">
+  <div class="wrap">
+    <p class="eyebrow reveal">The benchmark, Inhabit</p>
+    <h2 class="reveal">75 long-horizon tasks, 31 layouts.</h2>
+    <p class="lead reveal">Each task is one instruction with up to three goals, carried out by the whole body in one of 31 furniture layouts. A task takes 15 to 45 seconds of continuous motion, built from 4 to 12 segments.</p>
+    <div class="filters reveal" id="filters"></div>
+    <div class="tiers reveal" id="tiers"></div>
+    <div class="grid reveal" id="grid"></div>
+    <p class="hint reveal" id="gridCount"></p>
+  </div>
+</section>
+
+<!-- ================= results ================= -->
+<section class="band alt" id="results">
+  <div class="wrap">
+    <p class="eyebrow reveal">Results</p>
+    <h2 class="reveal">74 of 75 tasks completed.</h2>
+    <p class="lead reveal">With the same interfaces, the success of Inhabitant follows the language model that acts as the agent. No model is trained.</p>
+    <div class="res reveal">
+      <div class="card">
+        <div class="card-head"><h3>Success rate on Inhabit</h3><div class="seg" id="tierSeg"></div></div>
+        <div class="bars" id="mainBars"></div>
+        <p class="hint">† existing agents adapted to Inhabit, with Claude Opus 5.5. Each task is run once.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= film ================= -->
+<section class="band" id="filmSec">
+  <div class="wrap">
+    <p class="eyebrow reveal">The film</p>
+    <h2 class="reveal">Inhabitant in 72 seconds.</h2>
+    <div class="film reveal" id="film">
+      <video id="filmVideo" src="media/teaser.mp4" poster="media/teaser.jpg" muted loop playsinline preload="metadata"></video>
+      <button class="sound" id="soundBtn" aria-label="Sound on or off">Sound off</button>
+    </div>
+    <div class="facts reveal">
+      <div><b class="grad">74 / 75</b><span>tasks completed</span></div>
+      <div><b>0</b><span>models trained</span></div>
+      <div><b>3</b><span>goals in one instruction, at most</span></div>
+      <div><b>31</b><span>furniture layouts</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= cite ================= -->
+<section class="band alt" id="cite">
+  <div class="wrap narrow">
+    <p class="eyebrow reveal">Paper</p>
+    <h2 class="reveal">Inhabitant: An Agent Framework for Long-Horizon Human-Scene Interaction with Spatial Control and Quantitative Feedback</h2>
+    <p class="authors reveal"></p>
+    <div class="cta reveal"><a class="btn primary ext" data-link="arxiv" href="#">arXiv</a><a class="btn ext" data-link="github" href="#">GitHub</a><a class="btn ext" data-link="hf" href="#">Dataset</a><a class="btn ext" data-link="video" href="#">Full video</a></div>
+    <div class="bib reveal"><pre id="bibtex"></pre><button class="btn small" id="copyBib">Copy BibTeX</button></div>
+    <p class="hint reveal" id="credits"></p>
+  </div>
+</section>
+</main>
+
+<div class="modal" id="modal" hidden><div class="sheet" role="dialog" aria-modal="true"><button class="close" id="modalClose" aria-label="Close">×</button><div id="modalBody"></div></div></div>
+
+<script src="data/data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

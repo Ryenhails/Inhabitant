@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Inhabitant: long-horizon human-scene interaction</title>
+<meta name="description" content="Inhabitant is a training-free agent framework for long-horizon human-scene interaction with spatial control and quantitative feedback.">
+<meta property="og:title" content="Inhabitant">
+<meta property="og:description" content="One instruction. A whole apartment. One body.">
+<meta property="og:image" content="media/teaser.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="nav" id="nav">
+  <a class="brand" href="#top">Inhabitant</a>
+  <nav class="links">
+    <a href="#episode">Episode</a><a href="#loop">How it works</a><a href="#tasks">Tasks</a><a href="#results">Results</a><a href="#cite">Cite</a>
+  </nav>
+  <div class="nav-right">
+    <button class="icon-btn" id="themeBtn" aria-label="Switch between day and night"><span class="sun"></span></button>
+    <a class="btn small" id="paperLinkTop" href="#cite">Paper</a>
+  </div>
+</header>
+
+<main id="top">
+<!-- ================= hero ================= -->
+<section class="hero">
+  <p class="eyebrow reveal">Long-horizon human-scene interaction</p>
+  <h1 class="reveal">One instruction.<br>A whole apartment.<br><span class="grad">One body.</span></h1>
+  <p class="lead reveal">Inhabitant is a training-free agent framework. A language model writes the motion of a whole body with spatial control, measures what happened in the scene, and revises until the task is done.</p>
+  <div class="cta reveal">
+    <button class="btn primary" id="playFilm"><span class="tri"></span>Watch the film</button>
+    <a class="btn" href="#episode">Explore an episode</a>
+  </div>
+  <p class="authors reveal" id="authors"></p>
+  <div class="film reveal" id="film">
+    <video id="filmVideo" src="media/teaser.mp4" poster="media/teaser.jpg" muted loop playsinline preload="metadata"></video>
+    <button class="sound" id="soundBtn" aria-label="Sound on or off">Sound off</button>
+  </div>
+  <div class="facts reveal">
+    <div><b class="grad">74 / 75</b><span>tasks completed</span></div>
+    <div><b>0</b><span>models trained</span></div>
+    <div><b>3</b><span>goals in one instruction, at most</span></div>
+    <div><b>31</b><span>furniture layouts</span></div>
+  </div>
+</section>
+
+<!-- ================= episode ================= -->
+<section class="band" id="episode">
+  <div class="wrap">
+    <p class="eyebrow reveal">One episode</p>
+    <h2 class="reveal">A sentence goes in.<br>A continuous motion comes out.</h2>
+    <p class="quote reveal" id="epInstruction"></p>
+    <div class="goals reveal" id="epGoals"></div>
+    <div class="player reveal">
+      <div class="stage">
+        <video id="epVideo" src="media/episode/auto.mp4" poster="media/episode/auto.jpg" muted playsinline preload="metadata"></video>
+        <button class="bigplay" id="epPlay" aria-label="Play or pause"><span class="tri"></span></button>
+        <div class="stage-tag" id="epTag">segment 1</div>
+      </div>
+      <aside class="side">
+        <div class="map" id="epMap">
+          <video id="epTop" src="media/episode/top.mp4" poster="media/episode/top.jpg" muted playsinline preload="metadata"></video>
+          <svg id="epSvg" viewBox="0 0 1000 560" preserveAspectRatio="none"></svg>
+        </div>
+        <div class="segcard" id="segCard"></div>
+      </aside>
+    </div>
+    <div class="segbar reveal" id="segBar"></div>
+    <p class="hint reveal">Click a segment to jump to it. Every block is one motion that the agent committed after trying, measuring and revising it.</p>
+  </div>
+</section>
+
+<!-- ================= loop ================= -->
+<section class="band alt" id="loop">
+  <div class="wrap">
+    <p class="eyebrow reveal">How it works</p>
+    <h2 class="reveal">Try. Measure. <span class="grad">Revise.</span></h2>
+    <p class="lead reveal">A motion rarely works the first time. The agent does not guess what went wrong from a picture: it asks the scene for a number and edits the control specification by that number.</p>
+    <div class="loop reveal">
+      <div class="loop-stage">
+        <video id="lpVideo" src="media/episode/cushion.mp4" poster="media/episode/cushion.jpg" muted playsinline preload="metadata"></video>
+        <svg id="lpSvg" viewBox="0 0 1000 562.5" preserveAspectRatio="none"></svg>
+        <div class="stage-tag" id="lpTag">try 1</div>
+      </div>
+      <div class="loop-side">
+        <div class="steps" id="lpSteps">
+          <button data-s="0" class="on"><i>1</i>Try</button><button data-s="1"><i>2</i>Measure</button><button data-s="2"><i>3</i>Revise</button><button data-s="3"><i>4</i>Try again</button>
+        </div>
+        <div class="panel" id="lpPanel"></div>
+      </div>
+    </div>
+    <div class="two reveal">
+      <div class="card"><h3>Spatial control</h3><p>The agent writes the input of a pretrained motion generator directly: text prompts, root waypoints, end-effector targets and full-body keyframes. It can say where a hand has to be at a given frame.</p></div>
+      <div class="card"><h3>Quantitative feedback</h3><p>Every motion is executed in a scene simulator. The agent queries positions, distances and contacts of the body and the objects, in the same coordinates as its control specification.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= tasks ================= -->
+<section class="band" id="tasks">
+  <div class="wrap">
+    <p class="eyebrow reveal">The benchmark, Inhabit</p>
+    <h2 class="reveal">75 long-horizon tasks.</h2>
+    <p class="lead reveal">Each task is one instruction with up to three goals, carried out by the whole body in a furnished apartment. A task takes 15 to 45 seconds of continuous motion, built from 4 to 12 segments.</p>
+    <div class="filters reveal" id="filters"></div>
+    <div class="tiers reveal" id="tiers"></div>
+    <div class="grid reveal" id="grid"></div>
+    <p class="hint reveal" id="gridCount"></p>
+  </div>
+</section>
+
+<!-- ================= results ================= -->
+<section class="band alt" id="results">
+  <div class="wrap">
+    <p class="eyebrow reveal">Results</p>
+    <h2 class="reveal">Both interfaces matter.</h2>
+    <div class="res reveal">
+      <div class="card">
+        <div class="card-head"><h3>Success rate on Inhabit</h3><div class="seg" id="tierSeg"></div></div>
+        <div class="bars" id="mainBars"></div>
+        <p class="hint">† existing agents adapted to Inhabit, with Claude Opus 5.5. Each task is run once.</p>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Take an interface away</h3></div>
+        <p class="sub">Spatial control: which constraints may the agent write?</p>
+        <div class="seg wide" id="ctlSeg"></div>
+        <div class="stats" id="ctlStats"></div>
+        <p class="sub">Feedback: what does the agent receive?</p>
+        <div class="toggles" id="fbToggles"></div>
+        <div class="stats" id="fbStats"></div>
+        <p class="hint">Ablation set of 20 tasks, Claude Opus 5.5.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= cite ================= -->
+<section class="band" id="cite">
+  <div class="wrap narrow">
+    <p class="eyebrow reveal">Paper</p>
+    <h2 class="reveal">Inhabitant: An Agent Framework for Long-Horizon Human-Scene Interaction with Spatial Control and Quantitative Feedback</h2>
+    <div class="cta reveal"><a class="btn primary" id="paperLink" href="#">Paper</a><a class="btn" id="codeLink" href="#">Code</a><a class="btn" id="videoLink" href="#">Full video</a></div>
+    <div class="bib reveal"><pre id="bibtex"></pre><button class="btn small" id="copyBib">Copy BibTeX</button></div>
+    <p class="hint reveal" id="credits"></p>
+  </div>
+</section>
+</main>
+
+<!-- the apartment follows the page: a dot walks the path of the episode as you scroll -->
+<aside class="minimap" id="minimap" aria-hidden="true"><img src="media/episode/top.jpg" alt=""><svg viewBox="0 0 1000 560" preserveAspectRatio="none"><path id="mmPath"></path><circle id="mmDot" r="16"></circle></svg><span id="mmLabel">Hall</span></aside>
+
+<div class="modal" id="modal" hidden><div class="sheet" role="dialog" aria-modal="true"><button class="close" id="modalClose" aria-label="Close">×</button><div id="modalBody"></div></div></div>
+
+<script src="data/data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
