@@ -118,39 +118,44 @@
     $("svg", fw).addEventListener("mouseleave", () => show("all")); show("all");
   })();
 
-  /* ---------- tasks: one tier at a time, a few tiles first, one small player beside the grid ---------- */
+  /* ---------- tasks: one tier at a time; a small panel beside the grid shows the sequence (where there is one), the path from above and the details ---------- */
   (function () {
     const TO = ["low", "mid", "high", "posture"], T = D.tasks.slice().sort((a, b) => TO.indexOf(a.tier) - TO.indexOf(b.tier) || a.id.localeCompare(b.id));
     const TIERS = { low: ["Low", "1 goal", "One goal in one instruction."], mid: ["Mid", "2 goals", "Two goals in one instruction, in any order unless the instruction says otherwise."], high: ["High", "3 goals", "Three goals in one instruction: the longest sequences of the benchmark."], posture: ["Posture", "goal + posture", "A goal with an object, then a posture of the whole body: sitting, lying or kneeling."] };
-    const TYPES = [["place", "Place"], ["throw", "Throw"], ["foot", "By foot"], ["open", "Open / close"]], FIRST = 6, mean = a => a.reduce((x, y) => x + y, 0) / a.length;
-    const VID = t => "media/" + (t.full ? "full/" : "tiles/") + t.id + ".mp4", IMG = t => "media/" + (t.full ? "full/" : "tiles/") + t.id + ".jpg", name = t => TIERS[t.tier][0] + " task " + (+t.id.split("_")[1]);
-    const S = { tier: "high", type: "all", open: false, pin: null }, grid = $("#grid"), panel = $("#taskPanel"), more = $("#moreBtn"); let shown = null, pv = null;
+    const TYPES = [["place", "Place"], ["throw", "Throw"], ["foot", "By foot"], ["open", "Open / close"]], mean = a => a.reduce((x, y) => x + y, 0) / a.length;
+    const GOAL = { place: "Place an object", throw: "Throw an object", foot: "Move it with a foot", open: "Open or close", posture: "Take a posture" }, name = t => TIERS[t.tier][0] + " task " + (+t.id.split("_")[1]);
+    const S = { tier: "high", type: "all", open: false, pin: null }, grid = $("#grid"), panel = $("#taskPanel"), more = $("#moreBtn"); let shown = null, pv = null, raf = 0;
     TO.forEach(k => { const b = el("button", "", "<b>" + TIERS[k][0] + "</b><span>" + TIERS[k][1] + "</span><i>" + T.filter(t => t.tier === k).length + "</i>"); b.setAttribute("role", "tab"); b.onclick = () => { S.tier = k; S.type = "all"; S.open = false; S.pin = null; draw(); }; b.dataset.k = k; $("#tierTabs").appendChild(b); });
-    function show(t) {                                   /* the small player: the whole sequence of one task, with what the task asks for */
-      if (shown === t.id) return; shown = t.id;
-      const segs = t.segs || [], bar = segs.length ? '<div class="tp-bar">' + segs.map((s, i) => '<span style="flex-grow:' + (s[1] - s[0]) + '"><i></i></span>').join("") + "</div>" : '<div class="tp-bar"><span style="flex-grow:1"><i></i></span></div>';
-      panel.innerHTML = '<div class="tp-video"><video muted loop playsinline autoplay poster="' + IMG(t) + '" src="' + VID(t) + '"></video><span class="st' + (t.success ? "" : " x") + '"></span></div>' + bar +
-        '<div class="tp-body"><div class="tp-k">' + name(t) + '</div><p class="tp-q">“' + esc(t.instruction) + '”</p><div class="tp-goals">' + t.types.map((x, i) => '<span class="pill mini"><i>' + (i + 1) + "</i>" + ({ place: "Place an object", throw: "Throw an object", foot: "Move it with a foot", open: "Open or close", posture: "Take a posture" }[x]) + "</span>").join("") + "</div>" +
-        '<div class="tp-stats"><div><b>' + t.seconds.toFixed(0) + " s</b><span>of motion</span></div><div><b>" + t.segments + "</b><span>segments</span></div><div><b>" + t.tries + '</b><span>tries</span></div><div><b style="color:' + (t.success ? "var(--ok)" : "var(--bad)") + '">' + (t.success ? "Done" : "Missed") + "</b><span>" + (t.success ? "task completed" : "not completed") + "</span></div></div>" +
-        (t.full ? "" : '<p class="hint">Preview: the last committed segment of this task.</p>') + "</div>";
-      pv = $("video", panel); const cells = $$(".tp-bar span i", panel); pv.play().catch(() => {});
-      pv.ontimeupdate = () => { const x = pv.currentTime; if (segs.length) segs.forEach((s, i) => { cells[i].style.width = clamp((x - s[0]) / (s[1] - s[0]), 0, 1) * 100 + "%"; }); else if (pv.duration) cells[0].style.width = x / pv.duration * 100 + "%"; };
-      if (segs.length) $$(".tp-bar span", panel).forEach((c, i) => { c.onclick = () => { pv.currentTime = segs[i][0] + 0.01; pv.play().catch(() => {}); }; });
+    function show(t) {
+      if (shown === t.id) return; shown = t.id; cancelAnimationFrame(raf); const m = t.map, segs = t.segs || [[0, t.seconds]], dur = segs[segs.length - 1][1], MH = m ? Math.round(1000 * m.h / m.w) : 0;
+      panel.innerHTML = (t.featured ? '<div class="tp-video"><video muted loop playsinline autoplay poster="media/full/' + t.id + '.jpg" src="media/full/' + t.id + '.mp4"></video><span class="st' + (t.success ? "" : " x") + '"></span></div>' : "") +
+        '<div class="tp-bar">' + segs.map(s => '<span style="flex-grow:' + (s[1] - s[0]) + '"><i></i></span>').join("") + "</div>" +
+        (m ? '<div class="tp-map" style="aspect-ratio:' + m.w + "/" + m.h + '"><img src="media/top/' + t.id + '.webp" alt="The scene of this task from above"><svg viewBox="0 0 1000 ' + MH + '" preserveAspectRatio="none"><polyline class="h"/><polyline class="l"/><circle class="s" r="13"/><circle class="d" r="15"/></svg><span class="tp-cap">path of the body, from above</span></div>' : "") +
+        '<div class="tp-body"><div class="tp-k">' + name(t) + '</div><p class="tp-q">“' + esc(t.instruction) + '”</p><div class="tp-goals">' + t.types.map((x, i) => '<span class="pill mini"><i>' + (i + 1) + "</i>" + GOAL[x] + "</span>").join("") + "</div>" +
+        '<div class="tp-stats"><div><b>' + dur.toFixed(0) + " s</b><span>of motion</span></div><div><b>" + t.segments + "</b><span>segments</span></div><div><b>" + t.tries + '</b><span>tries</span></div><div><b style="color:' + (t.success ? "var(--ok)" : "var(--bad)") + '">' + (t.success ? "Done" : "Missed") + "</b><span>" + (t.success ? "task completed" : "not completed") + "</span></div></div></div>";
+      pv = $("video", panel); const cells = $$(".tp-bar span i", panel), pts = m ? m.path.map(p => (p[0] * 1000).toFixed(1) + "," + (p[1] * MH).toFixed(1)) : [], H = $(".tp-map .h", panel), L = $(".tp-map .l", panel), Dt = $(".tp-map .d", panel), St = $(".tp-map .s", panel);
+      if (m) { St.setAttribute("cx", m.path[0][0] * 1000); St.setAttribute("cy", m.path[0][1] * MH); }
+      const paint = x => {                               /* x = seconds into the sequence */
+        segs.forEach((s, i) => { cells[i].style.width = clamp((x - s[0]) / (s[1] - s[0]), 0, 1) * 100 + "%"; });
+        if (m) { const n = clamp(Math.round(x * m.fps), 0, pts.length - 1), str = pts.slice(0, n + 1).join(" "); H.setAttribute("points", str); L.setAttribute("points", str); Dt.setAttribute("cx", m.path[n][0] * 1000); Dt.setAttribute("cy", m.path[n][1] * MH); }
+      };
+      if (pv) { pv.play().catch(() => {}); const loop = () => { paint(pv.currentTime); raf = requestAnimationFrame(loop); }; loop(); $$(".tp-bar span", panel).forEach((c, i) => { c.onclick = () => { pv.currentTime = segs[i][0] + 0.01; pv.play().catch(() => {}); }; }); }
+      else { const t0 = performance.now(); let off = 0; const loop = () => { const x = ((performance.now() - t0) / 1000 * 2 + off) % (dur + 1.2); paint(Math.min(x, dur)); raf = requestAnimationFrame(loop); }; loop(); }   /* no footage: the path draws itself, at twice the speed of the motion */
     }
     function draw() {
       $$("#tierTabs button").forEach(b => b.classList.toggle("on", b.dataset.k === S.tier)); const inT = T.filter(t => t.tier === S.tier), list = inT.filter(t => S.type === "all" || t.types.includes(S.type));
       $("#tierHead").innerHTML = "<p>" + TIERS[S.tier][2] + '</p><div class="th-stats"><span><b>' + inT.length + "</b> tasks</span><span><b>" + mean(inT.map(t => t.seconds)).toFixed(0) + " s</b> of motion on average</span><span><b>" + mean(inT.map(t => t.segments)).toFixed(0) + "</b> segments on average</span><span><b>" + inT.filter(t => t.success).length + " / " + inT.length + "</b> completed</span></div>";
       const ch = $("#typeChips"); ch.innerHTML = ""; const mk = (k, n, c) => { const b = el("button", "chip" + (S.type === k ? " on" : ""), n + '<span class="n">' + c + "</span>"); b.onclick = () => { S.type = S.type === k && k !== "all" ? "all" : k; S.open = false; draw(); }; ch.appendChild(b); };
       mk("all", "All goals", inT.length); TYPES.forEach(([k, n]) => { const c = inT.filter(t => t.types.includes(k)).length; if (c) mk(k, n, c); });
-      const vis = S.open ? list : list.slice(0, FIRST); grid.innerHTML = "";
+      const first = list.filter(t => t.featured), rest = list.filter(t => !t.featured), head = first.length ? first : rest.slice(0, 6), tail = first.length ? rest : rest.slice(6), vis = S.open ? head.concat(tail) : head; grid.innerHTML = "";
       vis.forEach(t => {
-        const d = el("button", "tile" + (S.pin === t.id ? " sel" : ""), '<img loading="lazy" src="' + IMG(t) + '" alt=""><span class="st' + (t.success ? "" : " x") + '"></span><span class="lb"><b>' + name(t) + "</b>" + t.types.join(", ") + ", " + t.seconds.toFixed(0) + " s</span>");
+        const d = el("button", "tile" + (t.featured ? "" : " plan") + (S.pin === t.id ? " sel" : ""), '<img loading="lazy" src="media/' + (t.featured ? "full/" + t.id + ".jpg" : "top/" + t.id + ".webp") + '" alt="">' + (t.featured ? '<span class="pl"><span class="tri"></span></span>' : "") + '<span class="st' + (t.success ? "" : " x") + '"></span><span class="lb"><b>' + name(t) + "</b>" + t.types.join(", ") + ", " + t.seconds.toFixed(0) + " s</span>");
         d.onmouseenter = () => show(t); d.onfocus = () => show(t); d.onclick = () => { S.pin = t.id; $$(".tile", grid).forEach(x => x.classList.toggle("sel", x === d)); show(t); };
         grid.appendChild(d);
       });
       grid.onmouseleave = () => { const p = T.find(t => t.id === S.pin); if (p) show(p); };
-      more.hidden = list.length <= FIRST; more.textContent = S.open ? "Show fewer" : "Show all " + list.length + " tasks"; more.onclick = () => { S.open = !S.open; draw(); };
-      const cur = T.find(t => t.id === S.pin && list.includes(t)) || vis[0]; if (cur) { S.pin = cur.id; $$(".tile", grid).forEach((x, i) => x.classList.toggle("sel", vis[i].id === cur.id)); show(cur); }
+      more.hidden = !tail.length; more.textContent = S.open ? "Show fewer" : "Show all other tasks (" + tail.length + ")"; more.onclick = () => { S.open = !S.open; draw(); };
+      const cur = T.find(t => t.id === S.pin && vis.includes(t)) || vis[0]; if (cur) { S.pin = cur.id; $$(".tile", grid).forEach((x, i) => x.classList.toggle("sel", vis[i].id === cur.id)); show(cur); }
     }
     draw(); new IntersectionObserver(es => es.forEach(e => { if (pv) e.isIntersecting ? pv.play().catch(() => {}) : pv.pause(); }), { threshold: 0.2 }).observe(panel);
   })();
