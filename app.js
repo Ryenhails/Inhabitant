@@ -4,7 +4,7 @@
   const D = window.INHABITANT, $ = (s, r) => (r || document).querySelector(s), $$ = (s, r) => [...(r || document).querySelectorAll(s)];
   const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
   const esc = s => String(s).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
-  const SITE = { authors: "Yao Zhang<sup>*</sup>, Zhuchenyang Liu<sup>*</sup>, Yu Xiao", affiliation: "Aalto University", note: "<sup>*</sup> equal contribution", links: { arxiv: "https://arxiv.org/abs/2611.25005", github: "https://github.com/yaozhang182/inhabitant", hf: "https://huggingface.co/datasets/zyyy12138/Inhabit" },   /* fill in when the paper, the code and the benchmark are public; empty = shown as "soon" */ bibtex: "@article{zhang2026inhabitant,\n  title         = {Inhabitant: An Agent Framework for Long-Horizon Human-Scene Interaction with Spatial Control and Quantitative Feedback},\n  author        = {Zhang, Yao and Liu, Zhuchenyang and Xiao, Yu},\n  journal       = {arXiv preprint arXiv:2611.25005},\n  year          = {2026},\n  eprint        = {2611.25005},\n  archivePrefix = {arXiv},\n  primaryClass  = {cs.RO}\n}",
+  const SITE = { authors: "Yao Zhang<sup>*</sup>, Zhuchenyang Liu<sup>*</sup>, Yu Xiao", affiliation: "Aalto University", note: "<sup>*</sup> equal contribution", links: { arxiv: "https://arxiv.org/abs/2611.25005", github: "https://github.com/yaozhang182/inhabitant", hf: "https://huggingface.co/datasets/zyyy12138/Inhabit" },   /* fill in when the paper, the code and the benchmark are public; empty = shown as "soon" */ bibtex: "@misc{zhang2026inhabitantagentframeworklonghorizon,\n      title={Inhabitant: An Agent Framework for Long-Horizon Human-Scene Interaction with Spatial Control and Quantitative Feedback},\n      author={Yao Zhang and Zhuchenyang Liu and Yu Xiao},\n      year={2026},\n      eprint={2611.25005},\n      archivePrefix={arXiv},\n      primaryClass={cs.RO},\n      url={https://arxiv.org/abs/2611.25005},\n}",
     credits: "Film music: “Life in Silico” by Scott Buckley, CC BY 4.0. Apartment: ReplicaCAD. Every frame is posed from the records of a run of the agent." };
 
   /* ---------- brand icons (paths of the Simple Icons set, CC0) ---------- */
@@ -32,7 +32,12 @@
 
   /* ---------- scroll stages: the scroll position scrubs a camera move ---------- */
   const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+  function whole(vid) {                                  /* scrubbing needs the whole file; a partly buffered video stalls on every seek */
+    const url = vid.getAttribute("src"); if (!window.fetch || !window.URL) return;
+    fetch(url).then(r => r.ok ? r.blob() : Promise.reject()).then(b => { const u = URL.createObjectURL(b), back = () => { vid.removeEventListener("error", back); vid.src = url; }; vid.addEventListener("error", back); vid.src = u; vid.load(); }).catch(() => {});
+  }
   function flyStage(sec, vid) {
+    whole(vid);
     const copies = $$(".fly-copy", sec), shade = $(".fly-shade", sec); let target = 0, cur = 0, on = false;
     const read = () => { const r = sec.getBoundingClientRect(); target = clamp(-r.top / Math.max(1, r.height - innerHeight), 0, 1); on = r.bottom > -200 && r.top < innerHeight + 200; };
     const draw = () => {
@@ -124,7 +129,7 @@
     const TIERS = { low: ["Low", "1 goal", "One goal in one instruction."], mid: ["Mid", "2 goals", "Two goals in one instruction, in any order unless the instruction says otherwise."], high: ["High", "3 goals", "Three goals in one instruction: the longest sequences of the benchmark."], posture: ["Posture", "goal + posture", "A goal with an object, then a posture of the whole body: sitting, lying or kneeling."] };
     const TYPES = [["place", "Place"], ["throw", "Throw"], ["foot", "By foot"], ["open", "Open / close"]], mean = a => a.reduce((x, y) => x + y, 0) / a.length;
     const GOAL = { place: "Place an object", throw: "Throw an object", foot: "Move it with a foot", open: "Open or close", posture: "Take a posture" }, name = t => TIERS[t.tier][0] + " task " + (+t.id.split("_")[1]);
-    const S = { tier: "high", type: "all", open: false, pin: null }, grid = $("#grid"), panel = $("#taskPanel"), more = $("#moreBtn"); let shown = null, pv = null, raf = 0;
+    const S = { tier: "high", type: "all", open: false, pin: null }, grid = $("#grid"), panel = $("#taskPanel"), more = $("#moreBtn"); let shown = null, pv = null, raf = 0, live = true;
     TO.forEach(k => { const b = el("button", "", "<b>" + TIERS[k][0] + "</b><span>" + TIERS[k][1] + "</span><i>" + T.filter(t => t.tier === k).length + "</i>"); b.setAttribute("role", "tab"); b.onclick = () => { S.tier = k; S.type = "all"; S.open = false; S.pin = null; draw(); }; b.dataset.k = k; $("#tierTabs").appendChild(b); });
     function show(t) {
       if (shown === t.id) return; shown = t.id; cancelAnimationFrame(raf); const m = t.map, segs = t.segs || [[0, t.seconds]], dur = segs[segs.length - 1][1], MH = m ? Math.round(1000 * m.h / m.w) : 0;
@@ -157,7 +162,8 @@
       more.hidden = !tail.length; more.textContent = S.open ? "Show fewer" : "Show all other tasks (" + tail.length + ")"; more.onclick = () => { S.open = !S.open; draw(); };
       const cur = T.find(t => t.id === S.pin && vis.includes(t)) || vis[0]; if (cur) { S.pin = cur.id; $$(".tile", grid).forEach((x, i) => x.classList.toggle("sel", vis[i].id === cur.id)); show(cur); }
     }
-    draw(); new IntersectionObserver(es => es.forEach(e => { if (pv) e.isIntersecting ? pv.play().catch(() => {}) : pv.pause(); }), { threshold: 0.2 }).observe(panel);
+    let started = false; new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting && !started) { started = true; draw(); } }), { rootMargin: "900px 0px" }).observe($("#tasks"));
+    new IntersectionObserver(es => es.forEach(e => { if (!started) return; if (e.isIntersecting) { if (pv) pv.play().catch(() => {}); if (!live) { const t = T.find(x => x.id === shown); shown = null; if (t) show(t); } live = true; } else { live = false; cancelAnimationFrame(raf); if (pv) pv.pause(); } }), { threshold: 0.05 }).observe($("#tasks"));
   })();
 
   /* ---------- results ---------- */
